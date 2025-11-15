@@ -221,12 +221,20 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 If this project helped you, please give it a ⭐ star!
 
+## 💖 Support the Developer
+
+If you find this project useful and want to support my work, you can buy me a coffee! ☕
+
+[![Trakteer](https://img.shields.io/badge/Trakteer-Support%20Me-red?style=for-the-badge&logo=ko-fi&logoColor=white)](https://teer.id/haadziq_fatkhiya)
+
+Your support helps me create more awesome open source projects! 🚀
+
 ---
 
 <div align="center">
 
 **Built with ❤️ for the IoT community**
 
-[Report Bug](https://github.com/yourusername/iot-hub-control/issues) • [Request Feature](https://github.com/yourusername/iot-hub-control/issues) • [Discussions](https://github.com/yourusername/iot-hub-control/discussions)
+[Report Bug](https://github.com/haadziqf/iot-hub-control-dashboard/issues) • [Request Feature](https://github.com/haadziqf/iot-hub-control-dashboard/issues) • [Discussions](https://github.com/haadziqf/iot-hub-control-dashboard/discussions)
 
 </div>
