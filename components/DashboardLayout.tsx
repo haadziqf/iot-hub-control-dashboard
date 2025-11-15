@@ -34,9 +34,9 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ user, onLogout, child
     <div className="min-h-screen flex bg-slate-900 text-slate-200">
       {/* Sidebar */}
       <aside className="w-64 bg-slate-800 p-4 flex flex-col border-r border-slate-700">
-        <div className="text-2xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-500 mb-8">
-            AQI Analytics
-        </div>
+        <h1 className="text-2xl font-bold text-slate-100">
+            IoT Hub Dashboard
+          </h1>
         
         <nav className="flex-grow space-y-2">
             <NavLink 

@@ -1,5 +1,5 @@
 {
-  "name": "AQI Monitoring Dashboard",
-  "description": "An advanced Air Quality Index (AQI) analytics platform with historical data charts, real-time monitoring, and user authentication. Built with MQTT for IoT device integration.",
+  "name": "IoT Hub Dashboard",
+  "description": "A modern real-time IoT control dashboard for monitoring environmental sensors and controlling devices via MQTT protocol. Built with React and TypeScript.",
   "requestFramePermissions": []
 }

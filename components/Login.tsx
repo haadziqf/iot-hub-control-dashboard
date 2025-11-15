@@ -24,8 +24,8 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     <div className="min-h-screen flex items-center justify-center bg-slate-900 p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-500">
-              AQI Analytics
+                        <h1 className="text-4xl font-bold text-slate-100 mb-2">
+              IoT Hub Dashboard
             </h1>
             <p className="text-slate-400 mt-2">Please sign in to access the dashboard.</p>
         </div>
@@ -77,8 +77,8 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
             </button>
           </div>
         </form>
-        <p className="text-center text-slate-600 text-xs">
-          &copy;2024 AQI Analytics Corp. All rights reserved.
+                <p className="text-xs text-slate-500">
+          &copy;2025 IoT Hub Dashboard. All rights reserved.
         </p>
       </div>
     </div>
