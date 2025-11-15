@@ -8,19 +8,23 @@ interface ConnectionCardProps {
 }
 
 const ConnectionCard: React.FC<ConnectionCardProps> = ({ connect, disconnect, connectionStatus }) => {
-  const [protocol, setProtocol] = React.useState('wss://');
-  const [host, setHost] = React.useState('broker.avisha.id');
-  const [port, setPort] = React.useState('8084');
-  const [path, setPath] = React.useState('/mqtt');
-  const [clientId, setClientId] = React.useState(`mqttx_${Math.random().toString(16).slice(2, 10)}`);
-  const [username, setUsername] = React.useState('');
-  const [password, setPassword] = React.useState('');
+  // Use environment variables for default MQTT configuration
+  const [protocol, setProtocol] = React.useState(import.meta.env.VITE_MQTT_PROTOCOL || 'wss://');
+  const [host, setHost] = React.useState(import.meta.env.VITE_MQTT_HOST || 'test.mosquitto.org');
+  const [port, setPort] = React.useState(import.meta.env.VITE_MQTT_PORT || '8084');
+  const [path, setPath] = React.useState(import.meta.env.VITE_MQTT_PATH || '/mqtt');
+  const [clientId, setClientId] = React.useState(`iot_client_${Math.random().toString(16).slice(2, 10)}`);
+  const [username, setUsername] = React.useState(import.meta.env.VITE_MQTT_USERNAME || '');
+  const [password, setPassword] = React.useState(import.meta.env.VITE_MQTT_PASSWORD || '');
 
   useEffect(() => {
-    if (protocol === 'wss://') {
-      setPort('8084');
-    } else if (protocol === 'ws://') {
-      setPort('8083');
+    // Auto-set standard ports based on protocol if not already set via env
+    if (!import.meta.env.VITE_MQTT_PORT) {
+      if (protocol === 'wss://') {
+        setPort('8084');
+      } else if (protocol === 'ws://') {
+        setPort('8083');
+      }
     }
   }, [protocol]);
 
@@ -64,7 +68,7 @@ const ConnectionCard: React.FC<ConnectionCardProps> = ({ connect, disconnect, co
               value={host}
               onChange={(e) => setHost(e.target.value)}
               className="flex-1 block w-full rounded-none rounded-r-md bg-slate-700 border border-slate-600 px-3 py-2 text-slate-100 focus:ring-cyan-500 focus:border-cyan-500 sm:text-sm"
-              placeholder="broker.avisha.id"
+              placeholder="Enter MQTT broker hostname"
               disabled={isConnected}
             />
           </div>

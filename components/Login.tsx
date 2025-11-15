@@ -5,14 +5,18 @@ interface LoginProps {
 }
 
 const Login: React.FC<LoginProps> = ({ onLogin }) => {
-  const [username, setUsername] = useState('admin');
-  const [password, setPassword] = useState('password');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+
+  // Use environment variables or configurable credentials
+  const defaultUsername = import.meta.env.VITE_LOGIN_USERNAME || 'admin';
+  const defaultPassword = import.meta.env.VITE_LOGIN_PASSWORD || 'iot2024';
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    // Simple hardcoded authentication for demonstration
-    if (username === 'admin' && password === 'password') {
+    // Authentication with configurable credentials
+    if (username === defaultUsername && password === defaultPassword) {
       setError('');
       onLogin(username);
     } else {
@@ -59,7 +63,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
-             <p className="text-xs text-slate-500 mt-2">Hint: admin / password</p>
+             <p className="text-xs text-slate-500 mt-2">Default: {defaultUsername} / {defaultPassword}</p>
           </div>
 
           {error && (

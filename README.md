@@ -51,11 +51,15 @@
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/iot-hub-control.git
-cd iot-hub-control
+git clone https://github.com/haadziqf/iot-hub-control-dashboard.git
+cd iot-hub-control-dashboard
 
 # Install dependencies
 npm install
+
+# (Optional) Configure custom login credentials
+cp .env.example .env
+# Edit .env with your preferred username/password
 
 # Start development server
 npm run dev
@@ -63,9 +67,41 @@ npm run dev
 
 ### First Steps
 1. 🌐 Open http://localhost:5173
-2. 👤 Login with any username
-3. ⚙️ Configure your MQTT broker in Settings
+2. 👤 Login with default credentials (admin/iot2024) or your custom ones
+3. ⚙️ Configure your MQTT broker in Settings  
 4. 📊 Start monitoring your IoT devices!
+
+### 🔐 Security Configuration
+
+### Login Credentials
+The dashboard uses configurable login credentials:
+
+**Default**: `admin` / `iot2024`
+
+**Custom Setup**:
+```bash
+# Copy environment template
+cp .env.example .env
+
+# Edit .env file with your preferences
+VITE_LOGIN_USERNAME=yourusername  
+VITE_LOGIN_PASSWORD=yourpassword
+```
+
+### MQTT Configuration  
+You can pre-configure MQTT broker settings:
+
+```bash
+# MQTT Broker defaults in .env
+VITE_MQTT_PROTOCOL=wss://
+VITE_MQTT_HOST=your-broker.com
+VITE_MQTT_PORT=8081  
+VITE_MQTT_PATH=/mqtt
+VITE_MQTT_USERNAME=your_username
+VITE_MQTT_PASSWORD=your_password
+```
+
+> ⚠️ **Security Note**: For production deployment, always change default credentials and use strong passwords. Never commit `.env` files to version control.
 
 ## 📡 MQTT Setup
 
@@ -113,16 +149,22 @@ Payload: {
 
 ### LED Control
 ```json
-// Simple on/off
+// Boolean format (default)
 Topic: "haadziq/led1/command"
-Payload: "true"  // or "false"
+Payload: "true"    // Turn ON
+Payload: "false"   // Turn OFF
 
-// With brightness
+// Numeric format
 Topic: "haadziq/led1/command"
-Payload: {
-  "status": true,
-  "brightness": 75
-}
+Payload: "1"       // Turn ON
+Payload: "0"       // Turn OFF
+
+// Alternative formats (also supported)
+Payload: "on"/"off"
+
+// JSON format (backward compatibility)
+Topic: "haadziq/led1/command"
+Payload: {"status": true}
 ```
 
 ## 🛠️ Technology Stack

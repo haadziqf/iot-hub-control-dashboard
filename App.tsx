@@ -16,7 +16,8 @@ const defaultSensorData: SensorData = {
 };
 
 const defaultLEDs: LEDState[] = [
-  { id: 'led1', name: 'LED Device', status: false, brightness: 50, lastToggled: new Date().toISOString() },
+  { id: 'led1', name: 'LED 1', status: false, lastToggled: new Date().toISOString() },
+  { id: 'led2', name: 'LED 2', status: false, lastToggled: new Date().toISOString() },
 ];
 
 const MAX_HISTORY_LENGTH = 100; // Store last 100 data points for the chart
@@ -37,6 +38,7 @@ function App() {
     ledCommand: 'haadziq/led1/command',
     ledStatus: 'haadziq/led1/status'
   });
+  const [commandFormat, setCommandFormat] = useState<'boolean' | 'numeric'>('boolean');
   
   const clientRef = useRef<MqttClient | null>(null);
 
@@ -172,41 +174,49 @@ function App() {
           } else if (lowerPayload === 'false' || lowerPayload === 'off' || lowerPayload === '0') {
             parsedStatus = { status: false };
           } else {
-            // Try to parse as number (brightness)
-            const numValue = parseFloat(trimmedPayload);
-            if (!isNaN(numValue)) {
-              if (numValue >= 0 && numValue <= 100) {
-                parsedStatus = { brightness: numValue, status: numValue > 0 };
-              } else {
-                parsedStatus = { status: numValue > 0 };
+            // Try to parse as JSON for backward compatibility
+            try {
+              const jsonData = JSON.parse(trimmedPayload);
+              if (typeof jsonData.status === 'boolean') {
+                parsedStatus = { status: jsonData.status };
               }
-            } else {
-              // Finally, try to parse as JSON
-              try {
-                parsedStatus = JSON.parse(trimmedPayload);
-              } catch (e) {
-                // Could not parse payload
-              }
+            } catch (e) {
+              // Could not parse payload
             }
           }
           
           // Update LED state if we have valid parsed status
           if (Object.keys(parsedStatus).length > 0) {
             setLedStates(prev => {
-              const updated = prev.map(led => {
-                if (led.id === ledId) {
-                  return { 
-                    ...led, 
-                    ...parsedStatus, 
-                    lastToggled: new Date().toISOString() 
-                  };
-                } else {
-                  return { ...led };
-                }
-              });
-              // Force a different array reference
-              setForceUpdate(prev => prev + 1);
-              return [...updated];
+              const existingIndex = prev.findIndex(led => led.id === ledId);
+              
+              if (existingIndex !== -1) {
+                // Update existing LED
+                const updated = prev.map(led => {
+                  if (led.id === ledId) {
+                    return { 
+                      ...led, 
+                      ...parsedStatus, 
+                      lastToggled: new Date().toISOString() 
+                    };
+                  } else {
+                    return { ...led };
+                  }
+                });
+                setForceUpdate(prev => prev + 1);
+                return [...updated];
+              } else {
+                // Create new LED if not exists
+                const newLed: LEDState = {
+                  id: ledId,
+                  name: `LED ${ledId.replace('led', '')}`,
+                  status: false,
+                  lastToggled: new Date().toISOString(),
+                  ...parsedStatus
+                };
+                setForceUpdate(prev => prev + 1);
+                return [...prev, newLed];
+              }
             });
           }
         }
@@ -306,12 +316,15 @@ function App() {
     const led = ledStates.find(l => l.id === ledId);
     if (led && clientRef.current && clientRef.current.connected) {
       const newStatus = !led.status;
-      const command = {
-        status: newStatus,
-        brightness: led.brightness
-      };
       
-      handlePublish(topicSettings.ledCommand, JSON.stringify(command), 0, false);
+      // Send command in selected format
+      const command = commandFormat === 'numeric' 
+        ? (newStatus ? '1' : '0')
+        : newStatus.toString();
+      
+      // Build specific topic for this LED
+      const specificTopic = `haadziq/${ledId}/command`;
+      handlePublish(specificTopic, command, 0);
       
       // Optimistically update local state
       setLedStates(prev => {
@@ -320,32 +333,10 @@ function App() {
             ? { ...l, status: newStatus, lastToggled: new Date().toISOString() }
             : { ...l }
         );
-        console.log(`🔄 Optimistic update for ${ledId}:`, updated);
         return [...updated];
       });
     }
-  }, [ledStates, handlePublish]);
-
-  const handleSetLEDBrightness = useCallback((ledId: string, brightness: number) => {
-    const led = ledStates.find(l => l.id === ledId);
-    if (led) {
-      const command = {
-        status: led.status, // Keep current status
-        brightness: brightness
-      };
-      
-      handlePublish(topicSettings.ledCommand, JSON.stringify(command), 0, false);
-      
-      // Optimistically update local state
-      setLedStates(prev => {
-        return prev.map(l => l.id === ledId ? {
-          ...l,
-          brightness: brightness,
-          lastToggled: new Date().toISOString()
-        } : l);
-      });
-    }
-  }, [ledStates, handlePublish, topicSettings]);
+  }, [ledStates, handlePublish, topicSettings, commandFormat]);
 
   const handleLogin = (username: string) => {
       setUser({ username });
@@ -370,7 +361,8 @@ function App() {
             ledStates={ledStates}
             isConnected={connectionStatus === 'Connected'}
             onToggleLED={handleToggleLED}
-            onSetLEDBrightness={handleSetLEDBrightness}
+            commandFormat={commandFormat}
+            onCommandFormatChange={setCommandFormat}
         />
       ) : (
         <Settings 

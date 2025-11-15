@@ -9,7 +9,8 @@ interface DashboardProps {
   ledStates: LEDState[];
   isConnected: boolean;
   onToggleLED: (ledId: string) => void;
-  onSetLEDBrightness: (ledId: string, brightness: number) => void;
+  commandFormat: 'boolean' | 'numeric';
+  onCommandFormatChange: (format: 'boolean' | 'numeric') => void;
 }
 
 const getTemperatureInfo = (temp: number): { level: TemperatureLevel; textColor: string; badgeColor: string; } => {
@@ -58,42 +59,41 @@ const SensorCard: React.FC<{
 const LEDControlCard: React.FC<{
   led: LEDState;
   onToggle: (ledId: string) => void;
-  onBrightnessChange: (ledId: string, brightness: number) => void;
-}> = ({ led, onToggle, onBrightnessChange }) => {
-    console.log(`🔍 LEDControlCard render for ${led.id}:`, led);
+  commandFormat: 'boolean' | 'numeric';
+}> = ({ led, onToggle, commandFormat }) => {
     return (
         <div className="bg-slate-800 border border-slate-700 rounded-lg p-4">
             <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center space-x-3">
-                    <div className={`w-4 h-4 rounded-full ${led.status ? 'bg-green-400' : 'bg-slate-600'}`}></div>
-                    <h3 className="text-sm font-medium text-slate-200">{led.name}</h3>
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
+                        led.status ? 'bg-green-400 shadow-lg shadow-green-400/30' : 'bg-slate-600'
+                    }`}>
+                        <div className={`w-3 h-3 rounded-full ${
+                            led.status ? 'bg-white' : 'bg-slate-400'
+                        }`}></div>
+                    </div>
+                    <h3 className="text-lg font-medium text-slate-200">{led.name}</h3>
                 </div>
                 <button
                     onClick={() => onToggle(led.id)}
-                    className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                         led.status 
-                            ? 'bg-green-500/20 text-green-300 hover:bg-green-500/30' 
-                            : 'bg-slate-600/20 text-slate-400 hover:bg-slate-600/30'
+                            ? 'bg-green-500 text-white hover:bg-green-600 shadow-lg shadow-green-500/30' 
+                            : 'bg-slate-600 text-slate-300 hover:bg-slate-500'
                     }`}
                 >
                     {led.status ? 'ON' : 'OFF'}
                 </button>
             </div>
-            {led.status && led.brightness !== undefined && (
-                <div className="space-y-2">
-                    <label className="text-xs text-slate-400">Brightness: {led.brightness}%</label>
-                    <input
-                        type="range"
-                        min="0"
-                        max="100"
-                        value={led.brightness}
-                        onChange={(e) => onBrightnessChange(led.id, parseInt(e.target.value))}
-                        className="w-full h-2 bg-slate-600 rounded-lg appearance-none cursor-pointer slider"
-                        aria-label={`${led.name} brightness control`}
-                    />
+            <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                    <span className="text-xs text-slate-500">Status: {led.status ? 'Active' : 'Inactive'}</span>
+                    <span className="text-xs bg-slate-700 px-2 py-0.5 rounded text-slate-400 font-mono">
+                        {commandFormat === 'numeric' ? (led.status ? '1' : '0') : (led.status ? 'true' : 'false')}
+                    </span>
                 </div>
-            )}
-            <p className="text-xs text-slate-500 mt-2">Last: {new Date(led.lastToggled).toLocaleTimeString()}</p>
+                <span className="text-xs text-slate-500">Last: {new Date(led.lastToggled).toLocaleTimeString()}</span>
+            </div>
         </div>
     );
 };
@@ -111,7 +111,7 @@ const DashboardSkeleton: React.FC = () => (
     </div>
 );
 
-const Dashboard: React.FC<DashboardProps> = ({ sensorData, sensorHistory, ledStates, isConnected, onToggleLED, onSetLEDBrightness }) => {
+const Dashboard: React.FC<DashboardProps> = ({ sensorData, sensorHistory, ledStates, isConnected, onToggleLED, commandFormat, onCommandFormatChange }) => {
   // Force re-render when LED states change
   useEffect(() => {
     // LED states updated
@@ -195,14 +195,41 @@ const Dashboard: React.FC<DashboardProps> = ({ sensorData, sensorHistory, ledSta
 
         {/* LED Controls */}
         <div>
-            <h2 className="text-xl font-semibold text-slate-200 mb-4">Device Controls</h2>
+            <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-semibold text-slate-200">Device Controls</h2>
+                <div className="flex items-center space-x-3">
+                    <span className="text-sm text-slate-400">Command Format:</span>
+                    <div className="flex bg-slate-700 rounded-lg p-1">
+                        <button
+                            onClick={() => onCommandFormatChange('boolean')}
+                            className={`px-3 py-1 text-xs font-medium rounded transition-colors ${
+                                commandFormat === 'boolean'
+                                    ? 'bg-blue-600 text-white'
+                                    : 'text-slate-300 hover:text-slate-100'
+                            }`}
+                        >
+                            true/false
+                        </button>
+                        <button
+                            onClick={() => onCommandFormatChange('numeric')}
+                            className={`px-3 py-1 text-xs font-medium rounded transition-colors ${
+                                commandFormat === 'numeric'
+                                    ? 'bg-blue-600 text-white'
+                                    : 'text-slate-300 hover:text-slate-100'
+                            }`}
+                        >
+                            1/0
+                        </button>
+                    </div>
+                </div>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {ledStates.map(led => (
                     <LEDControlCard 
-                        key={`${led.id}-${led.status}-${led.brightness}-${led.lastToggled}`}
+                        key={`${led.id}-${led.status}-${led.lastToggled}`}
                         led={led}
                         onToggle={onToggleLED}
-                        onBrightnessChange={onSetLEDBrightness}
+                        commandFormat={commandFormat}
                     />
                 ))}
                 {ledStates.length === 0 && (

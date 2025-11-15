@@ -9,8 +9,8 @@ const defaultTopics: TopicSettings = {
   temperature: 'haadziq/suhu',
   humidity: 'haadziq/kelembapan',
   sensorData: 'haadziq/sensor_data',
-  ledCommand: 'haadziq/led1/command',
-  ledStatus: 'haadziq/led1/status'
+  ledCommand: 'haadziq/+/command',
+  ledStatus: 'haadziq/+/status'
 };
 
 const TopicSettingsCard: React.FC<TopicSettingsCardProps> = ({ onTopicsChange }) => {
@@ -18,33 +18,80 @@ const TopicSettingsCard: React.FC<TopicSettingsCardProps> = ({ onTopicsChange })
     const saved = localStorage.getItem('mqtt-topics');
     return saved ? JSON.parse(saved) : defaultTopics;
   });
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
 
+  // Load saved topics on mount
   useEffect(() => {
-    localStorage.setItem('mqtt-topics', JSON.stringify(topics));
-    onTopicsChange(topics);
-  }, [topics, onTopicsChange]);
+    const saved = localStorage.getItem('mqtt-topics');
+    if (saved) {
+      const savedTopics = JSON.parse(saved);
+      onTopicsChange(savedTopics);
+    }
+  }, [onTopicsChange]);
 
   const handleTopicChange = (key: keyof TopicSettings, value: string) => {
     setTopics(prev => ({
       ...prev,
       [key]: value
     }));
+    setHasUnsavedChanges(true);
+    setSaveStatus('idle');
+  };
+
+  const handleSave = () => {
+    setSaveStatus('saving');
+    localStorage.setItem('mqtt-topics', JSON.stringify(topics));
+    onTopicsChange(topics);
+    
+    setTimeout(() => {
+      setSaveStatus('saved');
+      setHasUnsavedChanges(false);
+      
+      setTimeout(() => {
+        setSaveStatus('idle');
+      }, 2000);
+    }, 300);
   };
 
   const resetToDefaults = () => {
     setTopics(defaultTopics);
+    setHasUnsavedChanges(true);
+    setSaveStatus('idle');
   };
 
   return (
     <div className="bg-slate-800 border border-slate-700 rounded-lg p-6">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-slate-100">Topic Configuration</h3>
-        <button
-          onClick={resetToDefaults}
-          className="text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 px-3 py-1 rounded transition-colors"
-        >
-          Reset to Defaults
-        </button>
+        <div>
+          <h3 className="text-lg font-semibold text-slate-100">Topic Configuration</h3>
+          {hasUnsavedChanges && (
+            <p className="text-xs text-yellow-400 mt-1">⚠️ You have unsaved changes</p>
+          )}
+        </div>
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={resetToDefaults}
+            className="text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 px-3 py-1 rounded transition-colors"
+          >
+            Reset
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={!hasUnsavedChanges || saveStatus === 'saving'}
+            className={`text-xs px-4 py-1 rounded transition-colors font-medium ${
+              hasUnsavedChanges && saveStatus !== 'saving'
+                ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                : saveStatus === 'saving'
+                ? 'bg-blue-500 text-blue-100 cursor-not-allowed'
+                : saveStatus === 'saved'
+                ? 'bg-green-600 text-white'
+                : 'bg-slate-600 text-slate-400 cursor-not-allowed'
+            }`}
+          >
+            {saveStatus === 'saving' ? '💾 Saving...' : saveStatus === 'saved' ? '✅ Saved!' : '💾 Save'}
+          </button>
+        </div>
       </div>
 
       <div className="space-y-4">
